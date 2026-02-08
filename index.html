@@ -3,175 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Neon Delivery</title>
+    <title>Neon Delivery Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #000000;
-            --card: #1c1c1e;
-            --accent: #d1ff33;
-            --text: #ffffff;
-            --gray: #8e8e93;
+            --bg: #000; --card: #151517; --accent: #d1ff33; --text: #fff; --gray: #8e8e93;
         }
-
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 16px;
-            padding-bottom: 100px;
+            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+            margin: 0; padding: 16px; overflow-x: hidden;
         }
 
-        h1 { font-size: 24px; margin-bottom: 20px; }
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .user-badge { background: var(--card); padding: 5px 12px; border-radius: 20px; font-size: 14px; border: 1px solid #333; }
 
-        /* Панель админа */
-        #admin-panel {
-            display: none;
-            background: #2c2c2e;
-            padding: 15px;
-            border-radius: 16px;
-            border: 1px solid var(--accent);
-            margin-bottom: 20px;
+        /* Categories */
+        .categories { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px; scrollbar-width: none; }
+        .cat-chip {
+            background: var(--card); padding: 8px 18px; border-radius: 12px; white-space: nowrap;
+            font-size: 14px; font-weight: 600; border: 1px solid #222; transition: 0.3s;
+        }
+        .cat-chip.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        /* Grid */
+        .restaurants-grid { display: grid; gap: 16px; }
+        .card { background: var(--card); border-radius: 24px; overflow: hidden; border: 1px solid #222; position: relative; }
+        .card-img { height: 160px; background: linear-gradient(135deg, #222, #000); display: flex; align-items: center; justify-content: center; font-size: 50px; }
+        .card-info { padding: 16px; }
+        .price-tag { background: #2c2c2e; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: bold; color: var(--accent); }
+        
+        /* Floating Cart Button */
+        .cart-float {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: #000; width: 90%; padding: 16px;
+            border-radius: 18px; display: none; justify-content: space-between;
+            align-items: center; font-weight: 800; box-shadow: 0 10px 30px rgba(209, 255, 51, 0.3);
+            z-index: 100; cursor: pointer;
         }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 10px;
-            border: none;
-            background: #3a3a3c;
-            color: white;
-            box-sizing: border-box;
-        }
-
-        .btn-add {
-            background: var(--accent);
-            color: black;
-            border: none;
-            padding: 12px;
-            width: 100%;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* Карточки */
-        .restaurants-grid {
-            display: grid;
-            gap: 16px;
-        }
-
-        .card {
-            background: var(--card);
-            border-radius: 20px;
-            overflow: hidden;
-            position: relative;
-            transition: transform 0.2s;
-        }
-
-        .card:active { transform: scale(0.97); }
-
-        .card-img {
-            height: 140px;
-            background: linear-gradient(135deg, #333, #111);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-        }
-
-        .card-info { padding: 12px; }
-        .card-title { font-weight: bold; font-size: 18px; margin: 0; }
-        .card-tag { color: var(--gray); font-size: 14px; margin: 4px 0; }
-        .card-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 8px;
-        }
-        .rating { color: var(--accent); font-weight: bold; }
-
-        .delete-btn {
-            color: #ff453a;
-            font-size: 12px;
-            margin-top: 10px;
-            display: block;
-            text-decoration: none;
-        }
+        /* Admin Section */
+        #admin-panel { display: none; background: #1c1c1e; padding: 15px; border-radius: 20px; border: 2px dashed var(--accent); margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: none; background: #2c2c2e; color: #fff; box-sizing: border-box; }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { animation: fadeIn 0.4s ease forwards; }
     </style>
 </head>
 <body>
 
-    <div id="admin-panel">
-        <h3>Админка (Привет, Миша!)</h3>
-        <input type="text" id="res-name" placeholder="Название ресторана">
-        <input type="text" id="res-emoji" placeholder="Эмодзи (например 🍕)">
-        <button class="btn-add" onclick="saveRestaurant()">Опубликовать</button>
+    <div class="header">
+        <h1 style="margin:0; font-weight: 800;">Eats<span style="color:var(--accent)">.</span></h1>
+        <div class="user-badge" id="user-name">Guest</div>
     </div>
 
-    <h1>Рестораны</h1>
+    <div id="admin-panel">
+        <h3 style="margin-top:0">🛠 Control Panel (@mishahoroshi)</h3>
+        <input type="text" id="res-name" placeholder="Name (e.g. Papa Johns)">
+        <input type="text" id="res-emoji" placeholder="Emoji (e.g. 🍕)">
+        <button onclick="saveRestaurant()" style="background:var(--accent); border:none; width:100%; padding:12px; border-radius:12px; font-weight:bold;">Add Venue</button>
+    </div>
+
+    <div class="categories">
+        <div class="cat-chip active">All</div>
+        <div class="cat-chip">Burgers</div>
+        <div class="cat-chip">Sushi</div>
+        <div class="cat-chip">Pizza</div>
+        <div class="cat-chip">Desserts</div>
+    </div>
+
     <div class="restaurants-grid" id="list"></div>
+
+    <div class="cart-float" id="cart" onclick="checkout()">
+        <span>View Order</span>
+        <span id="cart-total">0 ₽</span>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.ready();
+        tg.enableClosingConfirmation();
 
-        const adminUser = "mishahoroshi"; // Твой ник
-        const listContainer = document.getElementById('list');
+        const adminUser = "mishahoroshi";
+        const user = tg.initDataUnsafe?.user;
+        if(user) document.getElementById('user-name').innerText = user.first_name;
+        if(user?.username === adminUser) document.getElementById('admin-panel').style.display = 'block';
 
-        // Проверка прав
-        if (tg.initDataUnsafe?.user?.username === adminUser) {
-            document.getElementById('admin-panel').style.display = 'block';
-        }
+        let cartCount = 0;
+        let totalPrice = 0;
 
-        // Загрузка данных
-        let restaurants = JSON.parse(localStorage.getItem('my_restaurants')) || [
-            {id: 1, name: "Burger Queen", emoji: "🍔", type: "Бургеры • 30 мин"},
-            {id: 2, name: "Sushi Master", emoji: "🍣", type: "Японская • 45 мин"}
+        let items = JSON.parse(localStorage.getItem('delivery_items')) || [
+            {id: 1, name: "Neon Burger", emoji: "🍔", price: 550, desc: "Smashed beef & lime sauce"},
+            {id: 2, name: "Cyber Sushi", emoji: "🍣", price: 890, desc: "Fresh salmon & wasabi"},
+            {id: 3, name: "Pizza 8-bit", emoji: "🍕", price: 720, desc: "Classic pepperoni"}
         ];
 
         function render() {
-            listContainer.innerHTML = '';
-            restaurants.forEach(res => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div class="card-img">${res.emoji}</div>
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+            items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'card';
+                el.innerHTML = `
+                    <div class="card-img">${item.emoji}</div>
                     <div class="card-info">
-                        <p class="card-title">${res.name}</p>
-                        <p class="card-tag">${res.type || 'Ресторан'}</p>
-                        <div class="card-meta">
-                            <span class="rating">★ 4.9</span>
+                        <div style="display:flex; justify-content:space-between">
+                            <p class="card-title" style="font-weight:bold; font-size:18px; margin:0">${item.name}</p>
+                            <span class="price-tag">${item.price} ₽</span>
                         </div>
-                        ${tg.initDataUnsafe?.user?.username === adminUser ? 
-                          `<a href="#" class="delete-btn" onclick="deleteRes(${res.id})">Удалить</a>` : ''}
+                        <p style="color:var(--gray); font-size:13px; margin:8px 0">${item.desc}</p>
+                        <button onclick="addToCart(${item.price})" style="background:var(--text); color:var(--bg); border:none; width:100%; padding:10px; border-radius:12px; font-weight:bold; margin-top:10px;">Add to Cart</button>
+                        ${user?.username === adminUser ? `<small onclick="deleteItem(${item.id})" style="color:red; display:block; margin-top:10px; text-align:center;">Delete</small>` : ''}
                     </div>
                 `;
-                listContainer.appendChild(card);
+                list.appendChild(el);
+            });
+        }
+
+        function addToCart(price) {
+            cartCount++;
+            totalPrice += price;
+            const cartBtn = document.getElementById('cart');
+            cartBtn.style.display = 'flex';
+            document.getElementById('cart-total').innerText = totalPrice + ' ₽';
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function checkout() {
+            tg.showConfirm(`Confirm order for ${totalPrice} ₽?`, (ok) => {
+                if(ok) {
+                    tg.sendData(JSON.stringify({order: "new", total: totalPrice}));
+                    tg.close();
+                }
             });
         }
 
         function saveRestaurant() {
             const name = document.getElementById('res-name').value;
             const emoji = document.getElementById('res-emoji').value || "🍽";
-            if (!name) return;
-
-            const newRes = { id: Date.now(), name, emoji, type: "Новое заведение • 20 мин" };
-            restaurants.push(newRes);
-            localStorage.setItem('my_restaurants', JSON.stringify(restaurants));
+            if(!name) return;
+            items.push({id: Date.now(), name, emoji, price: 600, desc: "Freshly added by admin"});
+            localStorage.setItem('delivery_items', JSON.stringify(items));
             render();
-            
             document.getElementById('res-name').value = '';
-            tg.HapticFeedback.notificationOccurred('success');
         }
 
-        function deleteRes(id) {
-            restaurants = restaurants.filter(r => r.id !== id);
-            localStorage.setItem('my_restaurants', JSON.stringify(restaurants));
+        function deleteItem(id) {
+            items = items.filter(i => i.id !== id);
+            localStorage.setItem('delivery_items', JSON.stringify(items));
             render();
         }
 
